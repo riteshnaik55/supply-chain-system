@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}You've logged in {% endblock %}
+
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta charset="utf-8" />
+    <script type='text/javascript'>
+        var map;
+        var directionsManager;
+        function GetMap()
+        {
+            map = new Microsoft.Maps.Map('#myMap', {});
+
+            //Load the directions module.
+            Microsoft.Maps.loadModule('Microsoft.Maps.Directions', function () {
+                //Create an instance of the directions manager.
+                directionsManager = new Microsoft.Maps.Directions.DirectionsManager(map);
+                directionsManager.setRequestOptions({
+                    routeMode: Microsoft.Maps.Directions.RouteMode.driving
+                });
+                //Create waypoints to route between.
+                var seattleWaypoint = new Microsoft.Maps.Directions.Waypoint({ address: document.getElementById('fromTbx').value });
+                directionsManager.addWaypoint(seattleWaypoint);
+
+                var workWaypoint = new Microsoft.Maps.Directions.Waypoint({ address: document.getElementById('toTbx').value });
+                directionsManager.addWaypoint(workWaypoint);
+
+                //Add event handlers to directions manager.
+                Microsoft.Maps.Events.addHandler(directionsManager, 'directionsError', directionsError);
+                Microsoft.Maps.Events.addHandler(directionsManager, 'directionsUpdated', directionsUpdated);
+
+                //Calculate directions.
+                directionsManager.calculateDirections();
+            });
+        }
+
+        function directionsUpdated(e) {
+            //Get the current route index.
+            var routeIdx = directionsManager.getRequestOptions().routeIndex;
+
+            //Get the distance of the route, rounded to 2 decimal places.
+            var distance = Math.round(e.routeSummary[routeIdx].distance * 100)/100;
+
+            //Get the distance units used to calculate the route.
+            var units = directionsManager.getRequestOptions().distanceUnit;
+            var distanceUnits = '';
+
+            if (units == Microsoft.Maps.Directions.DistanceUnit.km) {
+                distanceUnits = 'km'
+            } else {
+                //Must be in miles
+                distanceUnits = 'miles'
+            }
+
+            //Time is in seconds, convert to hours and round off.
+            var time = Math.round(e.routeSummary[routeIdx].timeWithTraffic / 86400 +1);
+
+            document.getElementById('distance').innerHTML=distance;
+            document.getElementById('time').innerHTML=time;
+            
+        }
+
+        function directionsError(e) {
+            // alert('Error: ' + e.message + '\r\nResponse Code: ' + e.responseCode)
+        }
+
+    </script>
+    <script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol?callback=GetMap&key=<API KEY>' async defer></script>
+    <style>
+        #myMap{
+            box-shadow: 0px 20px 20px #494949;
+        }
+        #inputPanel{
+            font-size: 25px;
+            font-weight: bolder;
+            width: auto;
+            background-color: rgb(235, 180, 0);
+            height: 600px;
+            border-radius: 25px;
+            box-shadow: 0px 20px 20px #494949;
+        }
+        .ip{
+            position: relative;
+            justify-content: center;
+            align-items: center;
+        }
+        input{
+            font-weight: bold;
+            width:300px;
+            border-radius: 10px;
+        }
+        #button, #Proceed{
+            font-weight: bolder;
+            background-color:rgb(184, 255, 113);
+        }
+        #button:hover, #Proceed:hover{
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body style="background-color: rgba(255,255,255,0.5); background-blend-mode: lighten; background-image: url(https://convergeconsulting.com/wp-content/uploads/2021/06/Supply-Chain-Visual.jpg); background-size: 100%;">
+    <div class="row"  style="justify-content: center; background-color: white;">
+        <h2 align="center">Select Source and Destination</h2>
+    </div>
+    
+    <br>
+        <div class="row" >
+            <div class="col col-lg-1">
+            </div>
+            <div class="col col-lg-5"style="height: 600px;">
+                <div id="myMap" style="height: 600px;border-radius: 25px; background-color:rgb(255, 255, 255); "></div>
+            </div>
+            <div class="col col-lg-1"></div>
+            <div class="col col-lg-4">
+                <div id="inputPanel" >
+                    <br><br><br>
+                    <form action="/table" method="post">
+                    <div class="row">
+                        &emsp;&emsp;From: &emsp;<input id="fromTbx" name="fromTbx" for="fromTbx" type="text" value=""  required/>
+                    </div>
+                    <br>
+                    <div class="row">
+                        &emsp;&emsp;To:&emsp; &emsp;&nbsp;<input id="toTbx" name="toTbx" for="toTbx" type="text" value="" required/>
+                    </div>
+                    <br>
+                    <div class="row ip">
+                        <input id="button" type="button" onclick="GetMap()" value="Calculate" />
+                    </div>
+                    <br>
+                    <div class="row ip">
+                        Distance :&nbsp;<div id="distance" name="distance" for="distance"></div>&nbsp;kms.
+                    </div>
+                    <div class="row ip">
+                        Time :&nbsp;<div id="time" name="time" for="time"></div>&nbsp;day(s)
+                    </div>
+                    <br>
+                    <div class="row ip">
+                        <input id="Proceed"  type="submit" value="Proceed" />
+                    </div>
+                </form>
+                </div>
+            </div>
+            <div class="col">
+                
+            </div>
+        </div>
+
+
+    <br><br>
+</html>
+
+{% endblock %}
